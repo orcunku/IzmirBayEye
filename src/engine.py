@@ -1,36 +1,74 @@
 import json
-from datetime import datetime
-import os
+import datetime
+import random
+import pandas as pd
+import numpy as np
+from sklearn.linear_model import LinearRegression
 
-class AnalyticsEngine:
-    """Advanced biochemical logic for H2S (Odor) prediction."""
-    def __init__(self, db_path="history.json"):
-        self.db_path = db_path
+DB_PATH = "history.json"
 
-    def predict_risk(self, data):
-        # 1. Biological Load (30% weight)
-        score = (data['chlorophyll'] * 30) + (data['turbidity'] * 0.5)
-        
-        # 2. Anaerobic/Odor Factor (50% weight)
-        if data['dissolved_oxygen'] < 3.5: score += 30 # Hypoxia penalty
-        if data['orp_value'] < 0: score += 20          # Reducing environment penalty
-            
-        # 3. Chemical/Meteo Stress (20% weight)
-        score += (data['ammonia_levels'] * 10)
-        if data['water_temp'] > 30: score += 5
-        if data['wind_speed'] < 4: score += 15 # Stagnation penalty
-            
-        risk = round(min(score, 100), 1)
-        self._save_to_history(risk, data)
-        return risk
+def calculate_environmental_metrics():
+    """Generates sensor data and executes Agentic Decisions."""
+    oxygen = round(random.uniform(2.0, 9.0), 2)
+    orp = round(random.uniform(-150, 350), 2)
+    temp = round(random.uniform(18, 28), 2)
 
-    def _save_to_history(self, risk, sensors):
-        entry = {"timestamp": datetime.now().isoformat(), "risk": risk, "sensors": sensors}
+    risk_score = 30 + (7 - oxygen) * 8 + (temp - 20) * 2
+    if orp < 0: risk_score += 15
+    risk_score = min(max(round(risk_score, 2), 0), 100)
+
+    data_point = {
+        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "oxygen": oxygen, "orp": orp, "temperature": temp,
+        "risk_score": risk_score
+    }
+    
+    _save_to_history(data_point)
+    
+    # --- AGENTIC AI LAYER ---
+    # The 'Guard' makes an autonomous decision based on risk
+    agent_action = "Monitoring"
+    if risk_score > 75:
+        agent_action = "CRITICAL_ALERT: Drafting report to Municipality."
+    elif risk_score > 50:
+        agent_action = "CAUTION: Flagging for manual verification."
+
+    return data_point, agent_action
+
+def _save_to_history(data):
+    try:
+        with open(DB_PATH, "r") as f:
+            history = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
         history = []
-        if os.path.exists(self.db_path):
-            with open(self.db_path, "r") as f:
-                try: history = json.load(f)
-                except: history = []
-        history.append(entry)
-        with open(self.db_path, "w") as f:
-            json.dump(history[-100:], f, indent=4) # Store last 100 snapshots
+    history.append(data)
+    with open(DB_PATH, "w") as f:
+        json.dump(history[-100:], f, indent=4)
+
+def get_ai_forecast():
+    """Predictive ML Layer."""
+    try:
+        with open(DB_PATH, "r") as f:
+            history = json.load(f)
+        if len(history) < 5: return "Collecting data..."
+        
+        df = pd.DataFrame(history)
+        X = np.array(range(len(df))).reshape(-1, 1)
+        y = df['risk_score'].values
+        model = LinearRegression().fit(X, y)
+        prediction = model.predict([[len(df)]])[0]
+        return round(float(prediction), 2)
+    except:
+        return "N/A"
+
+def rag_expert_chat(query: str):
+    """RAG-lite Layer: Simulates a chatbot answering based on local knowledge."""
+    knowledge = {
+        "odor": "Izmir Bay odors are typically caused by low dissolved oxygen and anaerobic activity.",
+        "solution": "Increasing circulation and dredging the inner bay are common solutions.",
+        "safe_limit": "A risk score below 40 is considered safe for the Izmir coastline."
+    }
+    for key in knowledge:
+        if key in query.lower():
+            return knowledge[key]
+    return "I am currently analyzing the Bay data to answer that more accurately."
