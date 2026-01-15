@@ -3,43 +3,43 @@ from datetime import datetime
 import os
 
 class AnalyticsEngine:
-    """The 'Brain' of BayEye AI. Calculates risk and persists data."""
-    
+    """Predicts odor events using Eutrophication and Anaerobic Decay logic."""
     def __init__(self, db_path="history.json"):
         self.db_path = db_path
 
     def predict_risk(self, data):
-        if not data:
-            return 0.0
-
-        # Weighted formula for H2S (Odor) Risk
-        # Chlorophyll (Algae) is the main driver, Water Temp accelerates it.
-        base_score = (data['chlorophyll'] * 65) + (data['water_temp'] * 1.1)
+        # 1. Biological Load (Algae + Turbidity)
+        score = (data['chlorophyll'] * 30) + (data['turbidity'] * 0.5)
         
-        # Stagnant water (Low wind) prevents gas dispersal
-        if data['wind_speed'] < 5:
-            base_score += 15
+        # 2. Anaerobic Risk (The 'Smell' Factor)
+        # Low Oxygen + Negative ORP = Immediate Odor
+        if data['dissolved_oxygen'] < 3.5:
+            score += 30
+        if data['orp_value'] < 0:
+            score += 20
             
-        risk = round(min(base_score, 100), 1)
+        # 3. Chemical Pollution (Ammonia)
+        score += (data['ammonia_levels'] * 10)
+        
+        # 4. Meteorology (Heat + Stagnation)
+        if data['water_temp'] > 30: score += 10
+        if data['wind_speed'] < 4: score += 15
+            
+        risk = round(min(score, 100), 1)
         self._save_to_history(risk, data)
         return risk
 
     def _save_to_history(self, risk, sensors):
-        log_entry = {
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "risk_level": risk,
-            "sensor_snapshot": sensors
+        entry = {
+            "timestamp": datetime.now().isoformat(),
+            "odor_risk": risk,
+            "sensors": sensors
         }
-        
-        # Append to file logic
         history = []
         if os.path.exists(self.db_path):
             with open(self.db_path, "r") as f:
-                try:
-                    history = json.load(f)
-                except json.JSONDecodeError:
-                    history = []
-        
-        history.append(log_entry)
+                try: history = json.load(f)
+                except: history = []
+        history.append(entry)
         with open(self.db_path, "w") as f:
-            json.dump(history[-100:], f, indent=4) # Keep last 100 entries
+            json.dump(history[-100:], f, indent=4)
