@@ -1,10 +1,15 @@
-def predict_odor_risk(weather, satellite):
-    """Scientific logic to predict odor based on stagnant water and algae."""
-    # Chlorophyll contributes 60%, Temp contributes 40%
-    base_score = (satellite['chlorophyll_index'] * 60) + (weather['air_temp'] * 1.1)
-    
-    # Penalty for low wind speed (odor accumulation)
-    if weather['wind_speed'] < 5:
-        base_score += 15
+import json
+from datetime import datetime
+
+class AnalyticsEngine:
+    def predict_risk(self, data):
+        # AI Logic: Temperature and Algae (Chlorophyll) are key drivers
+        score = (data['chlorophyll'] * 60) + (data['water_temp'] * 1.2)
+        if data['wind_speed'] < 5: score += 15
+        risk = round(min(score, 100), 1)
         
-    return round(min(base_score, 100), 1)
+        # Log to History (Persistence)
+        log = {"time": datetime.now().isoformat(), "risk": risk}
+        with open("history.json", "a") as f:
+            f.write(json.dumps(log) + "\n")
+        return risk
