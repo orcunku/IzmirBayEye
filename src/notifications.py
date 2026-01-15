@@ -2,18 +2,8 @@ class NotificationService:
     @staticmethod
     def get_alert(risk_score):
         if risk_score >= 80:
-            return {
-                "level": "CRITICAL",
-                "color": "#FF0000",
-                "title": " High H2S Risk Detected",
-                "message": "Atmospheric conditions suggest high odor accumulation. Municipality notified."
-            }
+            return {"level": "CRITICAL", "title": " High Odor Hazard", "msg": "Avoid the coastline. H2S levels rising."}
         elif risk_score >= 60:
-            return {
-                "level": "WARNING",
-                "color": "#FFA500",
-                "title": " Moderate Odor Risk",
-                "message": "Potential for localized odors in coastal areas."
-            }
+            return {"level": "WARNING", "title": " Odor Alert", "msg": "Localized odors expected near the bay."}
         return None
 
