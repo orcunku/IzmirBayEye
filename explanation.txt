@@ -1,0 +1,36 @@
+============================================================
+IZMIRBAYEYE AI: TECHNICAL EXPLANATION & LOGIC
+============================================================
+
+1. SCIENTIFIC PARAMETERS USED:
+------------------------------
+- Dissolved Oxygen (DO): Measures hypoxia. Below 3.5mg/L, 
+  odor-producing anaerobic bacteria become active.
+- ORP (Redox Potential): Negative values indicate a state 
+  of organic decomposition (rotting) in the bay.
+- Ammonia (NH3): High levels indicate nitrogen-rich waste 
+  (sewage/runoff) that fuels algae and odor.
+- Chlorophyll & Turbidity: Measure biological load and 
+  water clarity (Eutrophication markers).
+
+2. ALGORITHM LOGIC (src/engine.py):
+-----------------------------------
+The system uses a "Penalty-Based Weighting" system:
+- 50% Weight (Chemical): Focuses on Oxygen and ORP. These 
+  are the direct triggers for H2S gas.
+- 30% Weight (Biological): Focuses on algae density.
+- 20% Weight (Physical): Focuses on wind and temperature. 
+  Heat speeds up the smell, low wind traps it.
+
+3. DATA PERSISTENCE:
+--------------------
+Every time the /monitor endpoint is called, the system 
+appends the results to 'history.json'. This allows for 
+future trend analysis and machine learning training.
+
+4. USER INTERFACE:
+------------------
+The 'mobile_app' folder contains a Flutter UI that 
+visualizes these complex biochemical readings into a 
+simple "Risk Percentage" for the average citizen.
+============================================================
