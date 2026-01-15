@@ -1,18 +1,16 @@
 from fastapi import FastAPI
 from src.data_fetcher import DataFetcher
-from src.engine import predict_odor_risk
+from src.engine import AnalyticsEngine
+from src.notifications import NotificationService
 
-app = FastAPI(title="BayEye AI - Monitoring System")
+app = FastAPI(title="BayEye AI Enterprise")
 fetcher = DataFetcher()
+engine = AnalyticsEngine()
 
-@app.get("/predict")
-async def get_prediction():
-    w = fetcher.get_weather_data()
-    s = fetcher.get_satellite_indices()
-    risk = predict_odor_risk(w, s)
+@app.get("/status")
+async def check_bay():
+    data = fetcher.get_environmental_data()
+    risk = engine.predict_risk(data)
+    push = NotificationService.notify_citizens(risk)
     
-    return {
-        "status": "Success",
-        "odor_risk": f"{risk}%",
-        "recommendation": "High Alert" if risk > 70 else "Normal"
-    }
+    return {"risk_score": risk, "notification_sent": bool(push), "details": push}
