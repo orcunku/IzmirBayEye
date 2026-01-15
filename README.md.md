@@ -11,3 +11,10 @@ BayEye AI is a predictive system designed to monitor water quality and predict o
 
 The model analyzes the correlation between **Eutrophication (Algae growth)** and **Thermal Inversion**. When wind speeds drop and water temperature rises, the system alerts the municipality to activate circulation pumps.
 ![BayEye AI Model Analysis](MockupImage.png)
+
+SYSTEM FLOW:
+[ Satellite Data ] ----\
+                        > [ Python API ] --(JSON)--> [ Flutter App ]
+[ Weather Sensors] ----/        |                         |
+                                |                         |
+                         [ Alert System ] ---------> [ Push Notification ]
